@@ -1,0 +1,4 @@
+node_modules
+# Nunca enviar o .env para o GitHub
+.env
+/generated/prisma

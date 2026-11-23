@@ -1,0 +1,71 @@
+// Biblioteca de Jogos
+// Tabelas: users, categorias, jogos, plataformas e jogos_plataformas (N:N)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  username    String       @unique
+  password    String
+  categorias  Categoria[]
+  jogos       Jogo[]
+  plataformas Plataforma[]
+
+  @@map("users") // Tabela no banco será "users"
+}
+
+// Entidade de apoio: 1:N com Jogo
+model Categoria {
+  id     String @id @default(cuid())
+  nome   String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  jogos  Jogo[]
+
+  @@map("categorias")
+}
+
+// Entidade principal A: pertence a um user, N:N com Plataforma
+model Jogo {
+  id            String           @id @default(cuid())
+  titulo        String
+  descricao     String?
+  anoLancamento Int?
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  categoriaId   String?
+  categoria     Categoria?       @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  plataformas   JogoPlataforma[]
+
+  @@map("jogos")
+}
+
+// Entidade principal B: pertence a um user, N:N com Jogo
+model Plataforma {
+  id     String           @id @default(cuid())
+  nome   String
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  jogos  JogoPlataforma[]
+
+  @@map("plataformas")
+}
+
+// Tabela associativa (N:N) entre Jogo e Plataforma, com um campo extra
+model JogoPlataforma {
+  jogoId       String
+  plataformaId String
+  horasJogadas Int        @default(0)
+  jogo         Jogo       @relation(fields: [jogoId], references: [id], onDelete: Cascade)
+  plataforma   Plataforma @relation(fields: [plataformaId], references: [id], onDelete: Cascade)
+
+  @@id([jogoId, plataformaId])
+  @@map("jogos_plataformas")
+}
